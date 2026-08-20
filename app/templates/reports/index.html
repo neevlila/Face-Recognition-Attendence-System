@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Analytics & Attendance Reports{% endblock %}
+{% block page_title %}Analytics & Comprehensive Reports{% endblock %}
+
+{% block header_actions %}
+<div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('reports.export_csv', start_date=start_date, end_date=end_date, department=selected_dept) }}" class="btn btn-secondary btn-sm">
+        Export CSV
+    </a>
+    <a href="{{ url_for('reports.export_excel', start_date=start_date, end_date=end_date, department=selected_dept) }}" class="btn btn-success btn-sm">
+        Export Excel Report (.xlsx)
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Filter Bar -->
+<div class="panel" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ url_for('reports.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">From Date</label>
+            <input type="date" id="start_date" name="start_date" class="form-control date-range-start" value="{{ start_date }}">
+        </div>
+
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">To Date</label>
+            <input type="date" id="end_date" name="end_date" class="form-control date-range-end" value="{{ end_date }}">
+        </div>
+
+
+        <div style="flex: 1.5; min-width: 180px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-secondary">Generate Report</button>
+            <a href="{{ url_for('reports.index') }}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Academic Attendance Percentage Sheet -->
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h3 class="panel-title">Cumulative Student Attendance & Exam Eligibility</h3>
+            <p style="font-size: 0.8rem; color: var(--text-muted);">Standard university eligibility threshold: &ge; 75.0%</p>
+        </div>
+        <span class="badge badge-info">Total Sessions Evaluated: {{ summary.total_sessions }}</span>
+    </div>
+    <div class="panel-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>ID Number</th>
+                        <th>Department</th>
+                        <th>Semester / Sec</th>
+                        <th>Attended Sessions</th>
+                        <th>Total Sessions</th>
+                        <th>Attendance %</th>
+                        <th>Academic Eligibility</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if summary.students %}
+                        {% for s in summary.students %}
+                        <tr>
+                            <td><strong>{{ s.name }}</strong></td>
+                            <td><code>{{ s.student_id }}</code></td>
+                            <td>{{ s.department }}</td>
+                            <td>{{ s.semester }} - Sec {{ s.section }}</td>
+                            <td>{{ s.days_present }}</td>
+                            <td>{{ s.total_sessions }}</td>
+                            <td>
+                                <strong style="color: {{ 'var(--success)' if s.percentage >= 75.0 else 'var(--danger)' }}; font-size: 1rem;">
+                                    {{ s.percentage }}%
+                                </strong>
+                            </td>
+                            <td>
+                                {% if s.percentage >= 75.0 %}
+                                    <span class="badge badge-success">✓ Eligible</span>
+                                {% else %}
+                                    <span class="badge badge-danger">⚠ Shortage ({{ s.percentage }}%)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                No students available for report generation.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

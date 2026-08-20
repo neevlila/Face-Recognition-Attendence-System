@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Management{% endblock %}
+{% block page_title %}Student Management Directory{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('students.add_student') }}" class="btn btn-primary btn-sm">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+    Add New Student
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Bar -->
+<div class="panel" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ url_for('students.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 2; min-width: 220px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Search Students</label>
+            <input type="text" name="search" class="form-control" placeholder="Search by name, student ID, or email..." value="{{ search }}">
+        </div>
+
+        <div style="flex: 1; min-width: 160px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1; min-width: 120px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Semester</label>
+            <select name="semester" class="form-select">
+                <option value="">All Semesters</option>
+                {% for sem in ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7', 'Sem 8'] %}
+                <option value="{{ sem }}" {% if selected_sem == sem %}selected{% endif %}>{{ sem }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-secondary">Filter</button>
+            {% if search or selected_dept or selected_sem %}
+            <a href="{{ url_for('students.index') }}" class="btn btn-secondary" title="Clear filters">✕</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Student List Table -->
+<div class="panel">
+    <div class="panel-header">
+        <h3 class="panel-title">Registered Students ({{ total_students }})</h3>
+    </div>
+    <div class="panel-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Department</th>
+                        <th>Semester / Sec</th>
+                        <th>Biometric Dataset</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if students %}
+                        {% for s in students %}
+                        <tr>
+                            <td>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--accent-cyan); border: 1px solid var(--border-subtle); overflow: hidden;">
+                                        {% if s.has_dataset %}
+                                            <img src="{{ url_for('students.dataset_image', student_id=s.student_id, filename='profile.jpg') }}" alt="{{ s.name }}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'">
+                                        {% else %}
+                                            {{ s.name[0]|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">{{ s.name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ s.email or 'No email' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><code>{{ s.student_id }}</code></td>
+                            <td>{{ s.department }}</td>
+                            <td>{{ s.semester }} - Sec {{ s.section }}</td>
+                            <td>
+                                {% if s.face_samples_count and s.face_samples_count >= 6 %}
+                                    <span class="badge badge-success">✓ {{ s.face_samples_count }}/6 Images</span>
+                                {% elif s.face_samples_count and s.face_samples_count > 0 %}
+                                    <span class="badge badge-warning">⚠ {{ s.face_samples_count }}/6 Images</span>
+                                {% else %}
+                                    <span class="badge badge-danger">✕ No Face Samples</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="badge badge-{{ 'success' if s.status == 'active' else 'secondary' }}">
+                                    {{ s.status|capitalize }}
+                                </span>
+                            </td>
+                            <td style="text-align: right;">
+                                <div style="display: inline-flex; gap: 0.4rem;">
+                                    <a href="{{ url_for('students.profile', id=s.id) }}" class="btn btn-secondary btn-sm" title="View Profile">
+                                        View Profile
+                                    </a>
+                                    <a href="{{ url_for('students.edit_student', id=s.id) }}" class="btn btn-secondary btn-sm" title="Edit Student">
+                                        Edit
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">👨‍🎓</div>
+                                <p style="font-size: 1rem; font-weight: 500;">No students found matching your criteria.</p>
+                                <p style="font-size: 0.85rem; margin-top: 0.25rem;">
+                                    <a href="{{ url_for('students.add_student') }}" style="color: var(--accent-cyan);">Click here to register a new student</a>
+                                </p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

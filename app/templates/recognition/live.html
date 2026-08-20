@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Attendance Scanner{% endblock %}
+{% block page_title %}Real-Time Face Recognition Terminal{% endblock %}
+
+{% block header_actions %}
+<button onclick="triggerGlobalModelTraining(this)" class="btn btn-secondary btn-sm">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <polyline points="1 20 1 14 7 14"></polyline>
+        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+    </svg>
+    Retrain Model
+</button>
+<a href="{{ url_for('attendance.index') }}" class="btn btn-primary btn-sm">
+    View Attendance Table
+</a>
+{% endblock %}
+
+{% block content %}
+{% if not is_trained %}
+<div class="alert alert-warning" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.25rem;">⚠</span>
+        <div>
+            <strong>Face Recognition Model is Not Trained Yet!</strong>
+            <p style="font-size: 0.8rem; margin-top: 0.15rem;">Please register students and capture face samples, then click <strong>"Retrain Model"</strong> to activate real-time identification.</p>
+        </div>
+    </div>
+    <button onclick="triggerGlobalModelTraining(this)" class="btn btn-primary btn-sm" style="white-space: nowrap;">Train Model Now</button>
+</div>
+{% endif %}
+
+<div class="cv-console">
+    <!-- Camera Video Feed Box -->
+    <div>
+        <div class="video-frame-box">
+            <!-- MJPEG Live Stream -->
+            <img src="{{ url_for('recognition.video_feed') }}" alt="Live CV Camera Feed" id="live-stream-img" onerror="setTimeout(() => { this.src = '{{ url_for('recognition.video_feed') }}?t=' + Date.now(); }, 1500);">
+
+            
+            <!-- HUD Sci-Fi Badges Overlay -->
+            <div class="hud-overlay">
+                <div class="hud-pill">
+                    <span style="color: var(--success); font-weight: bold;">● REC</span> LIVE 30FPS
+                </div>
+                <div class="hud-pill" id="hud-registered-count">
+                    {{ registered_count }} Students Enrolled
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Status & Guidance Info -->
+        <div style="margin-top: 1rem; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-secondary);">
+            <div style="display: flex; gap: 1.25rem;">
+                <div><span style="color: var(--text-muted);">Engine:</span> <strong style="color: var(--text-primary);">OpenCV Haar + LBPH</strong></div>
+                <div><span style="color: var(--text-muted);">Threshold:</span> <strong style="color: var(--accent-cyan);">70% Match</strong></div>
+                <div><span style="color: var(--text-muted);">Duplicate Cooldown:</span> <strong style="color: var(--success);">Active</strong></div>
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.75rem;">
+                Last Trained: {{ last_trained or 'Never' }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Live Events & Recognition Monitor -->
+    <div class="recognition-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 0.75rem;">
+            <div>
+                <h3 style="font-size: 1rem; font-weight: 600;">Real-Time Recognition Feed</h3>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">Auto-recorded attendance stream</p>
+            </div>
+            <div class="status-dot" title="Streaming Live Events"></div>
+        </div>
+
+        <!-- Dynamic Live Feed Container -->
+        <div id="live-attendance-feed" style="display: flex; flex-direction: column; min-height: 280px; max-height: 380px; overflow-y: auto;">
+            <!-- Populated via live_attendance.js -->
+        </div>
+
+        <!-- Legend Guide -->
+        <div style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem; display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.75rem;">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--success);"></span>
+                <span style="color: var(--text-secondary);">Green Box: Recognized & Attendance Marked</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--accent-cyan);"></span>
+                <span style="color: var(--text-secondary);">Cyan Box: Already Recorded Today (Protected Duplicate)</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <span style="width: 10px; height: 10px; border-radius: 2px; background: var(--danger);"></span>
+                <span style="color: var(--text-secondary);">Red Box: Unregistered / Unknown Individual</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/live_attendance.js') }}"></script>
+{% endblock %}

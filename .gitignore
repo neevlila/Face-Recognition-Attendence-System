@@ -1,0 +1,77 @@
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+
+# Databases & SQLite
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+test_cam*.jpg
+
+
+# Face Dataset Samples & Trained Models (Keep folder structure, ignore bulky binary captures)
+# Note: Keep placeholder / directory structure if desired
+dataset/*
+!dataset/.gitkeep
+models/*.yml
+models/*.json
+!models/.gitkeep
+
+# Exports & Generated Reports
+exports/*.csv
+exports/*.xlsx
+!exports/.gitkeep
+
+# Operating System & IDE Artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Testing & Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/

@@ -1,0 +1,125 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Records{% endblock %}
+{% block page_title %}Attendance Logs & History{% endblock %}
+
+{% block header_actions %}
+<div style="display: flex; gap: 0.5rem;">
+    <a href="{{ url_for('reports.export_csv', start_date=start_date, end_date=end_date, department=selected_dept, student_id=student_id) }}" class="btn btn-secondary btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export CSV
+    </a>
+    <a href="{{ url_for('reports.export_excel', start_date=start_date, end_date=end_date, department=selected_dept, student_id=student_id) }}" class="btn btn-success btn-sm">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export Excel (.xlsx)
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Date & Department Filter -->
+<div class="panel" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
+    <form method="GET" action="{{ url_for('attendance.index') }}" style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Start Date</label>
+            <input type="date" id="start_date" name="start_date" class="form-control date-range-start" value="{{ start_date }}">
+        </div>
+
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">End Date</label>
+            <input type="date" id="end_date" name="end_date" class="form-control date-range-end" value="{{ end_date }}">
+        </div>
+
+
+        <div style="flex: 1.5; min-width: 180px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Department</label>
+            <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label" style="margin-bottom: 0.35rem;">Student ID</label>
+            <input type="text" name="student_id" class="form-control" placeholder="e.g. STU101" value="{{ student_id }}">
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+            <button type="submit" class="btn btn-secondary">Apply Filter</button>
+            <a href="{{ url_for('attendance.index') }}" class="btn btn-secondary" title="Reset Filters">Reset</a>
+        </div>
+    </form>
+</div>
+
+<!-- Attendance Records Table -->
+<div class="panel">
+    <div class="panel-header">
+        <h3 class="panel-title">Verified Attendance Logs</h3>
+        <span style="font-size: 0.8rem; color: var(--text-muted);">Total Shown: {{ records|length }}</span>
+    </div>
+    <div class="panel-body" style="padding: 0;">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Student Name</th>
+                        <th>Student ID</th>
+                        <th>Department</th>
+                        <th>Semester / Sec</th>
+                        <th>Confidence</th>
+                        <th>Method</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if records %}
+                        {% for r in records %}
+                        <tr>
+                            <td><strong>{{ r.attendance_date }}</strong></td>
+                            <td>{{ r.attendance_time }}</td>
+                            <td>
+                                <div style="font-weight: 600; color: var(--text-primary);">{{ r.student_name }}</div>
+                            </td>
+                            <td><code>{{ r.student_id }}</code></td>
+                            <td>{{ r.department }}</td>
+                            <td>{{ r.semester }} - Sec {{ r.section }}</td>
+                            <td>
+                                <span style="color: var(--success); font-weight: 600;">{{ r.confidence }}%</span>
+                            </td>
+                            <td><span style="font-size: 0.75rem; color: var(--text-muted);">{{ r.recognition_method }}</span></td>
+                            <td><span class="badge badge-success">Present</span></td>
+                            <td style="text-align: right;">
+                                <form method="POST" action="{{ url_for('attendance.delete_record', id=r.id) }}" onsubmit="return confirm('Remove this attendance record?');" style="display: inline;">
+                                    <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);" title="Delete Record">✕</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                                <p style="font-size: 1rem; font-weight: 500;">No attendance records found for the selected criteria.</p>
+                                <p style="font-size: 0.85rem; margin-top: 0.25rem;">Adjust your filter dates or start the Live Recognition Scanner.</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

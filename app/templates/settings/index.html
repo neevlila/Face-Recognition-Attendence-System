@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}System Settings{% endblock %}
+{% block page_title %}System Settings & Calibration{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+    <!-- Recognition & Computer Vision Settings -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Computer Vision & Recognition Parameters</h3>
+        </div>
+        <div class="panel-body">
+            <form method="POST">
+                <input type="hidden" name="action" value="update_settings">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="confidence_threshold">Confidence Threshold (%)</label>
+                        <input type="number" step="1" min="40" max="95" id="confidence_threshold" name="confidence_threshold" class="form-control" value="{{ settings.confidence_threshold or '70' }}" required>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Minimum certainty score required to mark attendance automatically (Default: 70%)</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="cooldown_minutes">Duplicate Cooldown (Minutes)</label>
+                        <input type="number" min="1" max="1440" id="cooldown_minutes" name="cooldown_minutes" class="form-control" value="{{ settings.cooldown_minutes or '60' }}" required>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Prevents duplicate marking when a student remains in front of the camera</span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="camera_index">Hardware Camera Index</label>
+                        <input type="number" min="0" max="10" id="camera_index" name="camera_index" class="form-control" value="{{ settings.camera_index or '0' }}" required>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">0 for default primary webcam, 1 or 2 for external USB cameras</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="samples_per_student">Enrollment Samples per Student</label>
+                        <input type="number" min="10" max="100" id="samples_per_student" name="samples_per_student" class="form-control" value="{{ settings.samples_per_student or '30' }}" required>
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">Number of face angle crops captured during registration</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="institution_name">Institution / Department Name</label>
+                    <input type="text" id="institution_name" name="institution_name" class="form-control" value="{{ settings.institution_name or 'University Department of Computer Science' }}" required>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary">Save Parameters</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Admin Account Security -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Administrator Security Credentials</h3>
+        </div>
+        <div class="panel-body">
+            <form method="POST">
+                <input type="hidden" name="action" value="change_password">
+                
+                <div class="form-group">
+                    <label class="form-label" for="current_password">Current Password</label>
+                    <input type="password" id="current_password" name="current_password" class="form-control" placeholder="••••••••" required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+                    <div class="form-group">
+                        <label class="form-label" for="new_password">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Minimum 6 characters" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="confirm_password">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-secondary">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

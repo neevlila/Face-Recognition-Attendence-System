@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Overview{% endblock %}
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block header_actions %}
+<a href="{{ url_for('recognition.live_page') }}" class="btn btn-primary btn-sm">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="23 7 16 12 23 7"></polygon>
+        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+    </svg>
+    Launch Live Scanner
+</a>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Hero -->
+<div style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(56, 189, 248, 0.05)); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 1.5rem 2rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.4rem; margin-bottom: 0.25rem;">Good day, {{ g.admin.full_name if g.admin else 'Administrator' }} 👋</h1>
+        <p style="color: var(--text-secondary); font-size: 0.875rem;">Automatic attendance tracking powered by OpenCV & Local Binary Patterns (LBPH).</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="{{ url_for('students.add_student') }}" class="btn btn-secondary btn-sm">+ Register Student</a>
+        <button onclick="triggerGlobalModelTraining(this)" class="btn btn-primary btn-sm">⚡ Update Model</button>
+    </div>
+</div>
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+    <!-- Card 1: Total Enrolled Students -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-title">Total Registered Students</span>
+            <div class="kpi-icon primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-value">{{ kpis.total_students }}</div>
+        <div class="kpi-footer">
+            <span>Enrolled across all departments</span>
+        </div>
+    </div>
+
+    <!-- Card 2: Present Today -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-title">Present Today</span>
+            <div class="kpi-icon success">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-value" style="color: var(--success);">{{ kpis.present_today }}</div>
+        <div class="kpi-footer">
+            <span class="kpi-trend-up">● {{ kpis.attendance_rate }}%</span>
+            <span>of total student body</span>
+        </div>
+    </div>
+
+    <!-- Card 3: Absent Today -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-title">Absent Today</span>
+            <div class="kpi-icon danger">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-value" style="color: var(--danger);">{{ kpis.absent_today }}</div>
+        <div class="kpi-footer">
+            <span>Unmarked today</span>
+        </div>
+    </div>
+
+    <!-- Card 4: Attendance Rate -->
+    <div class="kpi-card">
+        <div class="kpi-header">
+            <span class="kpi-title">Attendance Rate</span>
+            <div class="kpi-icon cyan">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+            </div>
+        </div>
+        <div class="kpi-value">{{ kpis.attendance_rate }}%</div>
+        <div class="kpi-footer">
+            {% if kpis.trend_diff >= 0 %}
+                <span class="kpi-trend-up">↑ +{{ kpis.trend_diff }}%</span>
+            {% else %}
+                <span class="kpi-trend-down">↓ {{ kpis.trend_diff }}%</span>
+            {% endif %}
+            <span>vs yesterday</span>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="charts-grid">
+    <!-- Weekly Trend Line Chart -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">7-Day Attendance Trend</h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Real-time database sync</span>
+        </div>
+        <div class="panel-body" style="height: 280px;">
+            <canvas id="weeklyTrendChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Department Distribution Bar Chart -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Department Overview</h3>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Today</span>
+        </div>
+        <div class="panel-body" style="height: 280px;">
+            <canvas id="deptChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Today's Attendance & System Activity -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem;">
+    <!-- Today's Attendance Table -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">Today's Live Attendance Log</h3>
+            <a href="{{ url_for('attendance.index') }}" style="font-size: 0.8rem; color: var(--accent-cyan);">View All →</a>
+        </div>
+        <div class="panel-body" style="padding: 0;">
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>ID</th>
+                            <th>Department</th>
+                            <th>Time</th>
+                            <th>Confidence</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if today_records %}
+                            {% for rec in today_records %}
+                            <tr>
+                                <td>
+                                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                        <div style="width: 32px; height: 32px; border-radius: var(--radius-full); background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: var(--accent-cyan); border: 1px solid var(--border-subtle);">
+                                            {{ rec.student_name[0]|upper }}
+                                        </div>
+                                        <span style="font-weight: 500;">{{ rec.student_name }}</span>
+                                    </div>
+                                </td>
+                                <td><code>{{ rec.student_id }}</code></td>
+                                <td>{{ rec.department }}</td>
+                                <td>{{ rec.attendance_time }}</td>
+                                <td>
+                                    <span style="color: var(--success); font-weight: 600;">{{ rec.confidence }}%</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-success">Present</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 2.5rem; color: var(--text-muted);">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📋</div>
+                                    <p>No attendance recorded today yet.</p>
+                                    <p style="font-size: 0.8rem; margin-top: 0.25rem;">
+                                        <a href="{{ url_for('recognition.live_page') }}" style="color: var(--accent-cyan);">Launch Live Attendance</a> to start recognizing students.
+                                    </p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent System Activity Logs -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3 class="panel-title">System Activity Log</h3>
+        </div>
+        <div class="panel-body" style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 380px; overflow-y: auto;">
+            {% if recent_logs %}
+                {% for log in recent_logs %}
+                <div style="display: flex; gap: 0.75rem; font-size: 0.8rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-subtle);">
+                    <div style="color: var(--accent-cyan); font-weight: 600; font-size: 0.9rem;">●</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 500; color: var(--text-primary);">{{ log.details or log.action }}</div>
+                        <div style="color: var(--text-muted); font-size: 0.7rem;">{{ log.created_at }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">
+                    No recent activity logs.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script>
+    const weeklyData = {{ weekly_trend | tojson }};
+    const deptData = {{ dept_distribution | tojson }};
+    initAttendanceCharts(weeklyData, deptData);
+</script>
+{% endblock %}

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal Login - AuraPass AI</title>
+
+    <!-- Instant Theme Bootstrap -->
+    <script>
+        const savedTheme = localStorage.getItem('faceattend_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: var(--bg-main);
+            position: relative;
+            overflow: hidden;
+            padding: 1.5rem;
+        }
+
+        /* Ambient Glowing Background Orbs */
+        .ambient-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.6;
+            animation: float-ambient 10s ease-in-out infinite alternate;
+        }
+        .glow-1 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.4), transparent 70%);
+            top: -100px;
+            right: -100px;
+        }
+        .glow-2 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.35), transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: -5s;
+        }
+        .glow-3 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.25), transparent 70%);
+            top: 40%;
+            left: 20%;
+            animation-delay: -3s;
+        }
+
+        @keyframes float-ambient {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 30px) scale(1.1); }
+        }
+
+        /* Premium Glass Login Card */
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            padding: 2.75rem 2.25rem;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            position: relative;
+            z-index: 10;
+            animation: card-appear 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes card-appear {
+            from { opacity: 0; transform: translateY(20px) scale(0.97); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Iridescent Top Accent Bar */
+        .login-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 3px;
+            background: linear-gradient(90deg, #6366f1, #38bdf8, #10b981);
+            border-radius: 0 0 4px 4px;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+        }
+
+        /* Futuristic Face Scan Logo */
+        .login-logo-box {
+            position: relative;
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-logo {
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(135deg, var(--primary), #38bdf8);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 8px 24px var(--primary-glow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated Laser Scanning Line */
+        .scan-laser {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #ffffff;
+            box-shadow: 0 0 8px #38bdf8, 0 0 14px #ffffff;
+            animation: scan-move 2.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes scan-move {
+            0% { top: 4px; opacity: 0.8; }
+            100% { top: calc(100% - 6px); opacity: 1; }
+        }
+
+        /* Input with Icons */
+        .input-icon-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon-left {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            transition: color var(--transition-fast);
+        }
+
+        .input-icon-group .form-control {
+            padding-left: 2.85rem;
+            padding-right: 2.85rem;
+            height: 48px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+        }
+
+        .input-icon-group .form-control:focus + .input-icon-left {
+            color: var(--primary);
+        }
+
+        /* Eye Toggle Button */
+        .password-toggle-btn {
+            position: absolute;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.4rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .password-toggle-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Quick Demo Credentials Pill */
+        .demo-credentials-pill {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .demo-credentials-pill:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-login {
+            height: 48px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #38bdf8 100%);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+            border: none;
+            color: white;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 26px rgba(99, 102, 241, 0.55);
+        }
+        .btn-login:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Ambient Background Lighting -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="login-card">
+        <!-- Animated Biometric Face Logo -->
+        <div class="login-logo-box">
+            <div class="login-logo">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 3H5a2 2 0 0 0-2 2v4m0 6v4a2 2 0 0 0 2 2h4m6 0h4a2 2 0 0 0 2-2v-4m0-6V5a2 2 0 0 0-2-2h-4"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                    <path d="M7 20v-1a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v1"></path>
+                </svg>
+                <div class="scan-laser"></div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 1.75rem;">
+            <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.35rem; letter-spacing: -0.02em;">
+                AuraPass <span style="background: linear-gradient(135deg, #6366F1, #38BDF8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI</span>
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.875rem;">Next-Gen Neural Biometric Attendance Platform</p>
+        </div>
+
+
+        <!-- Flash Alert Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div style="margin-bottom: 1.25rem;">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}" style="padding: 0.75rem 1rem; font-size: 0.85rem; border-radius: 10px;">
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Quick 1-Click Demo Fill Badge -->
+        <div class="demo-credentials-pill" onclick="fillDemoCredentials()" title="Click to auto-fill credentials">
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+                <span style="font-size: 1rem;">🔑</span>
+                <div>
+                    <div style="color: var(--text-primary); font-weight: 600;">Default Administrator</div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem;"><code>admin</code> / <code>admin123</code></div>
+                </div>
+            </div>
+            <span style="color: var(--accent-cyan); font-weight: 600; font-size: 0.75rem; text-transform: uppercase;">Auto Fill →</span>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <!-- Username Input -->
+            <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label class="form-label" for="username">Username</label>
+                <div class="input-icon-group">
+                    <input type="text" id="username" name="username" class="form-control" placeholder="Enter administrator username" required autofocus>
+                    <span class="input-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Password Input with Eye Toggle -->
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+                <label class="form-label" for="password">Password</label>
+                <div class="input-icon-group">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter password" required>
+                    <span class="input-icon-left">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </span>
+                    <!-- Password Eye Viewing Button -->
+                    <button type="button" class="password-toggle-btn" id="password-toggle-btn" aria-label="Toggle password visibility" title="Show/Hide Password" onclick="togglePasswordVisibility()">
+                        <!-- Eye Icon (Show) -->
+                        <svg id="eye-icon-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <!-- Eye-Off Icon (Hide) -->
+                        <svg id="eye-icon-hide" style="display: none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                            <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Sign In Submit Button -->
+            <button type="submit" class="btn btn-login" style="width: 100%;">
+                Sign In to Admin Dashboard →
+            </button>
+        </form>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Password Visibility Toggle
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeShow = document.getElementById('eye-icon-show');
+            const eyeHide = document.getElementById('eye-icon-hide');
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeShow.style.display = 'none';
+                eyeHide.style.display = 'block';
+            } else {
+                passwordInput.type = 'password';
+                eyeShow.style.display = 'block';
+                eyeHide.style.display = 'none';
+            }
+        }
+
+        // Quick 1-Click Demo Fill
+        function fillDemoCredentials() {
+            document.getElementById('username').value = 'admin';
+            document.getElementById('password').value = 'admin123';
+            document.getElementById('password').focus();
+        }
+    </script>
+</body>
+</html>
